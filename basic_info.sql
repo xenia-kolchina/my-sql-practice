@@ -18,6 +18,28 @@ FROM posts
 ORDER BY created_at DESC 
 LIMIT 20 OFFSET 0; -- Первая страница (по 20 элементов)
 
+-- БАЗОВЫЕ ТИПЫ ДАННЫХ
+CREATE TABLE transactions (
+    id INT,                      -- Целое число
+    amount DECIMAL(10,2),        -- Точное число (деньги)
+    user_name VARCHAR(50),       -- Строка переменной длины
+    is_active BOOLEAN,           -- Логический тип
+    created_at TIMESTAMP         -- Дата и время
+);
+-- Примеры явных преобразований данных
+SELECT 
+    -- CAST: универсальный стандарт SQL
+    CAST('100' AS INT) AS string_to_int,
+    CAST(amount AS VARCHAR) AS decimal_to_string,
+    -- :: оператор (синтаксис PostgreSQL)
+    '2023-10-27'::DATE AS string_to_date,
+    id::FLOAT AS int_to_float,
+    -- CONVERT: специфично для SQL Server/MySQL (форматирование даты)
+    -- CONVERT(VARCHAR, created_at, 104) AS formatted_date, 
+    -- Неявное преобразование (автоматическое при расчетах)
+    id + 0.5 AS implicit_float
+FROM transactions;
+
 -- ФИЛЬТРАЦИЯ И СОРТИРОВКА (WHERE, ORDER BY, AND/OR, COUNT)
 -- 1. WHERE: Фильтрация строк по условию
 -- Использует операторы: =, !=, <, >, <=, >=
