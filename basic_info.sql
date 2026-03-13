@@ -179,6 +179,16 @@ SELECT * FROM Users JOIN Orders ON Users.id = Orders.user_id;
 -- USING: Лаконичный синтаксис. Работает, ТОЛЬКО если имена колонок 
 -- в обеих таблицах одинаковые (например, если бы в Orders был столбец 'id').
 -- SELECT * FROM Users JOIN Orders USING(id);
+-- Чтобы задать при объединении условие, прописываем его через AND
+SELECT DISTINCT name
+FROM Trip
+LEFT JOIN 
+Company
+ON Trip.company = Company.id
+AND Trip.plane = 'Boeing'
+WHERE name IS NOT NULL
+-- Также с джоинами можно использовать WHERE, HAVING это только для агрегированной информации (типа среднее, сумма, мин, макс, каунт)
+
 -- ==========================================================
 -- UNION: Вертикальное объединение
 -- Не склеивает строки по горизонтали, а добавляет результаты одного 
