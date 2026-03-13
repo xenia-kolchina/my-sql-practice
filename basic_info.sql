@@ -19,6 +19,9 @@ ORDER BY created_at DESC
 LIMIT 20 OFFSET 0; -- Первая страница (по 20 элементов)
 
 -- БАЗОВЫЕ ТИПЫ ДАННЫХ
+-- Посмотреть тип переменной
+\d table_name
+-- Типы переменных
 CREATE TABLE transactions (
     id INT,                      -- Целое число
     amount DECIMAL(10,2),        -- Точное число (деньги)
