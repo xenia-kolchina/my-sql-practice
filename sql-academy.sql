@@ -101,3 +101,48 @@ JOIN Pass_in_trip ON Trip.id = Pass_in_trip.trip
 JOIN Passenger ON Pass_in_trip.passenger = Passenger.id
 WHERE Passenger.name = 'Steve Martin' AND 
 Trip.town_to = 'London'
+
+-- ДЕНЬ 4 (15.03.2026). Решение задач 16-20 с SQL Academy.
+-- Задача 16. Сортировка пассажиров по количеству полетов
+-- Вывести отсортированный по количеству перелетов (по убыванию) и имени (по возрастанию) список пассажиров, совершивших хотя бы 1 полет.
+select count(Pass_in_trip.passenger) as count,
+Passenger.name
+from Pass_in_trip
+join Passenger on Pass_in_trip.passenger = Passenger.id
+group by Passenger.name
+order by count desc, Passenger.name asc
+-- Задача 17. Траты членов семьи в 2005 году
+-- Определить, сколько потратил в 2005 году каждый из членов семьи. В результирующей выборке не выводите тех членов семьи, которые ничего не потратили.
+SELECT FamilyMembers.member_name,
+FamilyMembers.`status`,
+SUM(Payments.amount * Payments.unit_price) as costs
+FROM Payments
+JOIN FamilyMembers ON Payments.family_member = FamilyMembers.member_id
+where date(Payments.`date`) BETWEEN '2005-01-01 00:00:00' and '2006-01-01 00:00:00'
+GROUP BY FamilyMembers.member_name,
+FamilyMembers.`status`
+-- Задача 18. Самый старший человек
+-- Выведите имя самого старшего человека. Если таких несколько, то выведите их всех.
+SELECT FamilyMembers.member_name
+FROM FamilyMembers
+ORDER BY FamilyMembers.birthday ASC 
+LIMIT 1
+-- Задача 19. Кто покупал картошку
+-- Определить, кто из членов семьи покупал картошку (potato)
+SELECT DISTINCT FamilyMembers.`status`
+FROM FamilyMembers
+JOIN Payments ON Payments.family_member = FamilyMembers.member_id
+JOIN Goods ON Goods.good_id = Payments.good
+WHERE Goods.good_name = 'potato'
+-- Задача 20. Траты на развлечения
+-- Сколько и кто из семьи потратил на развлечения (entertainment). Вывести статус в семье, имя, сумму
+SELECT FamilyMembers.`status`,
+FamilyMembers.member_name,
+SUM(Payments.amount * Payments.unit_price) as costs
+FROM FamilyMembers
+JOIN Payments ON Payments.family_member = FamilyMembers.member_id
+JOIN Goods ON Goods.good_id = Payments.good
+JOIN GoodTypes ON GoodTypes.good_type_id = Goods.type
+WHERE GoodTypes.good_type_name = 'entertainment'
+GROUP BY FamilyMembers.`status`,
+FamilyMembers.member_name
