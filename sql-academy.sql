@@ -146,3 +146,44 @@ JOIN GoodTypes ON GoodTypes.good_type_id = Goods.type
 WHERE GoodTypes.good_type_name = 'entertainment'
 GROUP BY FamilyMembers.`status`,
 FamilyMembers.member_name
+
+-- ДЕНЬ 5 (16.03.2026). Тема 8 от Changellenge. Решение задач 21-25 с SQL Academy.
+-- Задача 21. Товары, купленные более одного раза
+-- Определить товары, которые покупали более 1 раза
+SELECT Goods.good_name
+FROM Goods
+JOIN Payments ON Payments.good = Goods.good_id
+GROUP by Goods.good_name
+HAVING COUNT(Payments.good) > 1
+-- Задача 22. Имена всех матерей
+-- Найти имена всех матерей (mother)
+SELECT FamilyMembers.member_name
+FROM FamilyMembers
+WHERE FamilyMembers.`status` = 'mother'
+-- Задача 23. Самый дорогой деликатес
+-- Найдите самый дорогой деликатес (delicacies) и выведите его цену
+SELECT Goods.good_name,
+MAX(Payments.unit_price) as unit_price
+FROM GoodTypes
+JOIN Goods on GoodTypes.good_type_id = Goods.type
+JOIN Payments on Goods.good_id = Payments.good
+where GoodTypes.good_type_name = 'delicacies'
+GROUP by Goods.good_name
+limit 1
+-- Задача 24. Кто и сколько потратил в июне 2005 года
+-- Определить, кто и сколько потратил в июне 2005
+SELECT FamilyMembers.member_name, sum(Payments.amount * Payments.unit_price) as costs
+FROM Payments
+JOIN FamilyMembers on FamilyMembers.member_id = Payments.family_member
+WHERE Payments.`date` BETWEEN '2005-06-01' and '2005-07-01'
+GROUP by FamilyMembers.member_name
+-- Задача 25. Товары, не купленные в 2005 году
+-- Определить, какие товары не покупались в 2005 году. 
+-- Повторить вложенные запросы/подзапросы
+select Goods.good_name
+FROM Goods
+WHERE Goods.good_name not in
+(SELECT Goods.good_name
+FROM Payments
+left JOIN Goods ON Payments.good = Goods.good_id
+WHERE Payments.`date` BETWEEN '2005-01-01' and '2006-01-01')
