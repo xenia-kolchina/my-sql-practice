@@ -247,3 +247,55 @@ SELECT name AS label FROM Users
 UNION
 SELECT product AS label FROM Orders;
 
+/* =========================================================
+   ВЛОЖЕННЫЕ ЗАПРОСЫ (SUBQUERIES) И CTE (WITH)
+   ========================================================= */
+-- 1. ПОДЗАПРОСЫ (Subqueries)
+-- Это запрос внутри другого запроса. Выполняется от внутренних скобок к внешним.
+-- А) Скалярный подзапрос (возвращает одно значение)
+SELECT name, price
+FROM products
+WHERE price > (SELECT AVG(price) FROM products); -- Находим товары дороже среднего
+-- Б) Подзапрос-список (используется с IN)
+SELECT name 
+FROM users 
+WHERE id IN (SELECT user_id FROM orders WHERE total > 1000);
+-- В) Подзапрос в FROM (требует обязательный алиас)
+SELECT AVG(sum_orders)
+FROM (SELECT user_id, SUM(amount) as sum_orders 
+      FROM orders 
+      GROUP BY user_id) AS user_totals;
+-- 2. CTE (Common Table Expressions) / Концепция WITH
+-- Создает временный именованный результирующий набор, видимый в рамках одного запроса.
+WITH UserSpending AS (
+    -- Шаг 1: Считаем траты каждого пользователя
+    SELECT user_id, SUM(amount) as total_amount
+    FROM orders
+    GROUP BY user_id
+),
+HighValueUsers AS (
+    -- Шаг 2: Фильтруем тех, кто потратил много
+    SELECT user_id 
+    FROM UserSpending 
+    WHERE total_amount > 5000
+)
+-- Шаг 3: Финальная выборка
+SELECT u.name, s.total_amount
+FROM users u
+JOIN UserSpending s ON u.id = s.user_id
+WHERE u.id IN (SELECT user_id FROM HighValueUsers);
+/* =========================================================
+   СРАВНЕНИЕ: КОГДА И ЧТО ВЫБИРАТЬ?
+   ========================================================= */
+-- ПОДЗАПРОСЫ используем, когда:
+-- 1. Нужно сделать простую проверку "на лету" (в WHERE или SELECT).
+-- 2. Запрос очень короткий и не загромождает чтение.
+-- 3. Нужно проверить существование записи (EXISTS).
+-- CTE используем, когда:
+-- 1. Читаемость в приоритете. CTE читается "сверху вниз", как логические шаги.
+-- 2. Один и тот же набор данных нужен в запросе несколько раз (например, при джойнах).
+-- 3. Нужна рекурсия (WITH RECURSIVE) — подзапросы так не умеют.
+-- 4. Сложная логика: когда подзапросы превращаются в "матрешку", которую больно отлаживать.
+-- ГЛАВНОЕ ПРАВИЛО: 
+-- Если вложенность больше 1 уровня — переписывай на CTE.
+
