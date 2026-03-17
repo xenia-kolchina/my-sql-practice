@@ -187,3 +187,44 @@ WHERE Goods.good_name not in
 FROM Payments
 left JOIN Goods ON Payments.good = Goods.good_id
 WHERE Payments.`date` BETWEEN '2005-01-01' and '2006-01-01')
+
+-- ДЕНЬ 6 (17.03.2026). Решение задач 26-30 с SQL Academy.
+-- Задача 26. Группы товаров, не купленные в 2005 году
+-- Определить группы товаров, которые не приобретались в 2005 году
+select GoodTypes.good_type_name
+from GoodTypes 
+where GoodTypes.good_type_name not in 
+(select GoodTypes.good_type_name
+from GoodTypes
+join Goods on GoodTypes.good_type_id = Goods.type
+join Payments on Payments.good = Goods.good_id
+where Payments.`date` between '2005-01-01' and '2006-01-01')
+-- Задача 27. Траты по группам товаров в 2005 году
+-- Узнайте, сколько было потрачено на каждую из групп товаров в 2005 году. 
+-- Выведите название группы и потраченную на неё сумму. Если потраченная сумма равна нулю, т.е. товары из этой группы не покупались в 2005 году, то не выводите её.
+select GoodTypes.good_type_name, 
+sum(Payments.amount * Payments.unit_price) as costs
+from Payments
+INNER JOIN Goods ON Goods.good_id = Payments.good
+INNER JOIN GoodTypes ON GoodTypes.good_type_id = Goods.type
+WHERE Payments.`date` between '2005-01-01' and '2006-01-01'
+GROUP by GoodTypes.good_type_name
+-- Задача 28. Рейсы из Ростова в Москву
+-- Сколько рейсов совершили авиакомпании из Ростова (Rostov) в Москву (Moscow) ?
+select count(*) as count
+from Trip
+where Trip.town_from = 'Rostov' and Trip.town_to = 'Moscow'
+-- Задача 29. Имена пассажиров, летящих в Москву
+-- Выведите имена пассажиров, улетевших в Москву (Moscow) на самолете TU-134. В ответе не должно быть дубликатов.
+select DISTINCT Passenger.name
+FROM Passenger
+JOIN Pass_in_trip on Pass_in_trip.passenger = Passenger.id
+JOIN Trip on Trip.id = Pass_in_trip.trip
+where Trip.town_to = 'Moscow' and Trip.plane = 'TU-134'
+-- Задача 30. Нагруженность рейсов
+-- Вывести количество занятых мест по каждому рейсу из таблицы Pass_in_trip, отсортировав результат по убыванию количества занятых мест.
+select Pass_in_trip.trip,
+count(Pass_in_trip.place) as `count`
+from Pass_in_trip
+group by Pass_in_trip.trip
+order by `count` desc
