@@ -228,3 +228,31 @@ count(Pass_in_trip.place) as `count`
 from Pass_in_trip
 group by Pass_in_trip.trip
 order by `count` desc
+  
+-- ДЕНЬ 7 (18.03.2026). Решение задач 31-35 с SQL Academy.
+-- Задача 31. Члены семьи Quincey
+-- Вывести всех членов семьи с фамилией Quincey.
+select *
+from FamilyMembers
+where right(FamilyMembers.member_name,7) = 'Quincey'
+-- Задача 32. Средний возраст людей
+-- Вывести средний возраст людей (в годах), хранящихся в базе данных. Результат округлите до целого в меньшую сторону.
+SELECT FLOOR(AVG(TIMESTAMPDIFF(YEAR, FamilyMembers.birthday, CURDATE()))) as age
+from FamilyMembers
+-- Задача 33. Средняя цена икры
+-- Найдите среднюю цену икры на основе данных, хранящихся в таблице Payments. В базе данных хранятся данные о покупках красной (red caviar) 
+-- и черной икры (black caviar). В ответе должна быть одна строка со средней ценой всей купленной когда-либо икры.
+SELECT avg(Payments.unit_price) as cost
+FROM Payments
+JOIN Goods on Goods.good_id = Payments.good
+WHERE Goods.good_name = 'red caviar' or Goods.good_name = 'black caviar'
+-- Задача 34. Количество 10-х классов
+-- Сколько всего 10-ых классов
+select count(*) as count
+from Class
+where left(Class.name,2) = '10'
+-- Задача 35. Кабинеты, использованные 2 сентября 2019
+-- Сколько различных кабинетов школы использовались 2 сентября 2019 года для проведения занятий?
+SELECT count(DISTINCT Schedule.classroom) as count
+FROM Schedule
+WHERE Schedule.`date` = '2019-09-02'
