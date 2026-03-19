@@ -256,3 +256,34 @@ where left(Class.name,2) = '10'
 SELECT count(DISTINCT Schedule.classroom) as count
 FROM Schedule
 WHERE Schedule.`date` = '2019-09-02'
+
+-- ДЕНЬ 8 (19.03.2026). Решение задач 36-40 с SQL Academy.
+-- Задача 36. Обучающиеся, живущие на улице Пушкина
+-- Выведите информацию об обучающихся, живущих на улице Пушкина (ul. Pushkina)?
+select *
+from Student
+where left(Student.address,12) = 'ul. Pushkina'
+-- Задача 37. Возраст самого молодого обучающегося
+-- Сколько лет самому молодому обучающемуся ?
+SELECT TIMESTAMPDIFF(YEAR,Student.birthday,CURDATE()) as `year`
+FROM Student
+ORDER BY TIMESTAMPDIFF(YEAR,Student.birthday,CURDATE()) ASC 
+limit 1
+-- Задача 38. Количество учениц с именем Анна
+-- Сколько учениц с именем Анна (Anna) учится в школе?
+SELECT count(*) as count
+FROM Student
+WHERE lower(Student.first_name) = 'anna'
+-- Задача 39. Количество обучающихся в 10 B классе 
+-- Сколько обучающихся в 10 B классе ?
+SELECT COUNT(*) AS count
+FROM Student_in_class
+JOIN Class ON Student_in_class.class = Class.id
+WHERE Class.name = '10 B';
+-- Задача 40. Предметы Ромашкина П.П.
+-- Выведите название предметов, которые преподает Ромашкин П.П. (Romashkin P.P.). Обратите внимание, что в базе данных есть несколько учителей с такой фамилией.
+SELECT Subject.name as subjects
+FROM Teacher
+JOIN `Schedule` on `Schedule`.teacher = Teacher.id
+JOIN Subject on `Schedule`.subject = Subject.id
+WHERE Teacher.last_name = 'Romashkin' and left(Teacher.first_name,1) = 'P' and left(Teacher.middle_name,1) = 'P'
