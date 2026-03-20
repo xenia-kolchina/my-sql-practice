@@ -283,7 +283,46 @@ WHERE Class.name = '10 B';
 -- Задача 40. Предметы Ромашкина П.П.
 -- Выведите название предметов, которые преподает Ромашкин П.П. (Romashkin P.P.). Обратите внимание, что в базе данных есть несколько учителей с такой фамилией.
 SELECT Subject.name as subjects
-FROM Teacher
-JOIN `Schedule` on `Schedule`.teacher = Teacher.id
+
+-- ДЕНЬ 9 (20.03.2026). Решение задач 41-45 с SQL Academy.
+-- Задача 41. Начало четвёртого занятия
+-- Выясните, во сколько по расписанию начинается четвёртое занятие.
+select Timepair.start_pair 
+from Timepair
+where Timepair.id = 4
+-- Задача 42. Время, проведённое в школе
+-- Сколько времени обучающийся будет находиться в школе, учась со 2-го по 4-ый уч. предмет?
+select TIMEDIFF((select Timepair.end_pair
+from Timepair
+where Timepair.id = 4),
+(select Timepair.start_pair
+from Timepair
+where Timepair.id = 2)) as time
+-- Задача 43. Преподаватели физкультуры
+-- Выведите фамилии преподавателей, которые ведут физическую культуру (Physical Culture). Отсортируйте преподавателей по фамилии в алфавитном порядке.
+SELECT Teacher.last_name
+from Teacher
+JOIN `Schedule` ON `Schedule`.teacher = Teacher.id
 JOIN Subject on `Schedule`.subject = Subject.id
-WHERE Teacher.last_name = 'Romashkin' and left(Teacher.first_name,1) = 'P' and left(Teacher.middle_name,1) = 'P'
+where Subject.name = 'Physical Culture'
+ORDER by Teacher.last_name asc
+-- Задача 44. Максимальный возраст в 10 классах
+-- Найдите максимальный возраст (количество лет) среди обучающихся 10 классов на сегодняшний день. Для получения текущих даты и времени используйте функцию NOW().
+select TIMESTAMPDIFF(YEAR,Student.birthday,CURDATE()) as max_year
+from Student
+join Student_in_class on Student.id = Student_in_class.student
+join Class on Student_in_class.class = Class.id
+where Class.name like '%10%'
+order by max_year DESC 
+limit 1
+-- Задача 45. Самые используемые кабинеты
+-- Какие кабинеты чаще всего использовались для проведения занятий? Выведите те, которые использовались максимальное количество раз.
+SELECT `Schedule`.classroom
+FROM `Schedule`
+GROUP BY `Schedule`.classroom
+HAVING COUNT(*) = (
+    SELECT COUNT(*)
+    FROM Schedule
+    GROUP BY classroom
+    ORDER BY COUNT(*) DESC
+    LIMIT 1)
