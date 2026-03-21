@@ -326,3 +326,82 @@ HAVING COUNT(*) = (
     GROUP BY classroom
     ORDER BY COUNT(*) DESC
     LIMIT 1)
+
+-- ДЕНЬ 10 (21.03.2026). Оставшиеся темы про постгрес с ДПО (Оконные функции, ключи, работа с таблицами, их партицирование). Решение задач 46-50 с SQL Academy.
+-- Задача 46. Классы преподавателя Krauze
+-- select DISTINCT Class.name
+from Teacher
+join `Schedule` on `Schedule`.teacher = Teacher.id 
+join Class on `Schedule`.class = Class.id
+where Teacher.last_name = 'Krauze'
+-- Задача 47. Занятия Krauze 30 августа 2019
+-- Сколько занятий провел Krauze 30 августа 2019 г.?
+select count(`Schedule`.id) as `count`
+from `Schedule`
+JOIN Teacher ON Teacher.id = `Schedule`.teacher
+where Teacher.last_name = 'Krauze' and `Schedule`.date = '2019-08-30'
+-- Задача 48. Заполненность классов
+-- Выведите заполненность классов в порядке убывания
+select Class.name, count(Student_in_class.student) as `count`
+from Student_in_class
+JOIN Class on Student_in_class.class = Class.id
+group by Class.name
+order by count(Student_in_class.student) desc
+-- Задача 49. Процент обучающихся в 10 A классе
+-- Какой процент обучающихся учится в "10 A" классе? Выведите ответ в диапазоне от 0 до 100 с округлением до четырёх знаков после запятой, например, 96.0201.
+
+/* 
+===============================================================================
+ТЕОРИЯ: ПОДЗАПРОСЫ, CTE И ОКРУГЛЕНИЕ В SQL
+===============================================================================
+
+1. CTE (Common Table Expressions): Облегчают чтение, позволяя вынести сложные 
+   расчеты (например, агрегаты) в именованный временный результирующий набор.
+2. ПОДЗАПРОСЫ: Используются прямо в SELECT для получения одиночного (скалярного) 
+   значения, на которое можно делить переменные из основной таблицы.
+3. ПРЕОБРАЗОВАНИЕ ТИПОВ: CAST(... AS FLOAT) или умножение на 1.0 предотвращает 
+   "целочисленное деление" (когда 1/2 превращается в 0).
+4. ОКРУГЛЕНИЕ: ROUND(выражение, 4) ограничивает количество знаков после запятой.
+*/
+
+-- ПРИМЕР КОДА:
+
+WITH TotalData AS (
+    -- CTE: Считаем общую сумму один раз
+    SELECT SUM(amount) AS total_sum 
+    FROM orders
+)
+SELECT 
+    order_id,
+    customer_id,
+    amount,
+    
+    -- ВАРИАНТ 1: Деление через CTE + CAST + ROUND
+    -- Превращаем в FLOAT, делим на значение из CTE и округляем до 4 знаков
+    ROUND(CAST(amount AS FLOAT) / (SELECT total_sum FROM TotalData), 4) AS share_of_total,
+
+    -- ВАРИАНТ 2: Прямой подзапрос в SELECT
+    -- NULLIF защищает от ошибки "division by zero", если подзапрос вернет 0
+    ROUND(amount * 1.0 / NULLIF((SELECT AVG(amount) FROM orders), 0), 4) AS ratio_to_avg
+
+FROM orders;
+
+/*
+Краткая справка по функциям:
+- ROUND(x, 4)      -> Округляет число x до 4 знаков.
+- CAST(x AS FLOAT)  -> Явно приводит значение к числу с плавающей точкой.
+- NULLIF(x, 0)     -> Возвращает NULL, если x равен 0 (защита от падения запроса).
+*/
+
+-- Решение самой задачи
+select round((100*(select count(Student_in_class.student)
+from Student_in_class
+join Class on Student_in_class.class = Class.id
+where Class.name = '10 A') / count(Student_in_class.student)),4) as percent
+from Student_in_class
+-- Задача 50. Процент родившихся в 2000 году
+-- Какой процент обучающихся родился в 2000 году? Результат округлить до целого в меньшую сторону.
+select floor(100*(select count(*)
+from Student
+WHERE left(Student.birthday,4) = '2000') / count(*)) as percent 
+from Student
