@@ -405,3 +405,114 @@ select floor(100*(select count(*)
 from Student
 WHERE left(Student.birthday,4) = '2000') / count(*)) as percent 
 from Student
+
+-- ДЕНЬ 11 (22.03.2026). Оставшиеся темы про постгрес с ДПО (Оконные функции, ключи, работа с таблицами, их партицирование). Решение задач 51-55 с SQL Academy.
+-- Задача 51. Добавить товар "Cheese"
+-- Добавьте товар с именем "Cheese" и типом "food" в список товаров (Goods).
+  INSERT INTO Goods (good_id, good_name, type)
+SELECT 
+    (SELECT COUNT(*) + 1 FROM Goods) AS new_id, 
+    'Cheese',                                   
+    GoodTypes.good_type_id                      
+FROM GoodTypes
+WHERE GoodTypes.good_type_name = 'food'             
+LIMIt 1 
+  
+-- 1. Создаем таблицу (если её еще нет)
+CREATE TABLE IF NOT EXISTS users (
+    id INT PRIMARY KEY,
+    name VARCHAR(50),
+    email VARCHAR(50)
+);
+-- 2. Обычная вставка (ручной ввод ID)
+INSERT INTO users (id, name, email) 
+VALUES (1, 'Ivan', 'ivan@mail.com');
+-- 3. Вставка нескольких строк сразу
+INSERT INTO users (id, name, email) 
+VALUES 
+    (2, 'Anna', 'anna@mail.com'),
+    (3, 'Oleg', 'oleg@mail.com');
+-- 4. ВАШ СЛУЧАЙ: Вставка ключа как "Количество строк + 1"
+-- Мы используем вложенный подзапрос (SELECT ... FROM (...) AS temp), 
+-- чтобы MySQL не выдал ошибку 1093.
+INSERT INTO users (id, name, email)
+SELECT (rows_count + 1), 'Boris', 'boris@mail.com'
+FROM (SELECT COUNT(*) AS rows_count FROM users) AS temp;
+-- 5. Проверяем результат
+SELECT * FROM users;
+
+-- Задача 52. Добавить тип товара "auto"
+-- Добавьте в список типов товаров (GoodTypes) новый тип "auto".
+insert into GoodTypes (good_type_id,good_type_name)
+select (rowscount+1),'auto'
+from (select count(*) as rowscount from GoodTypes) as temp
+-- У всех таблиц должен быть алиас
+-- Задача 53. Изменить имя на "Andie Anthony"
+-- update FamilyMembers
+set FamilyMembers.member_name = 'Andie Anthony'
+where FamilyMembers.member_id = 3
+  
+-- 1. ПОДГОТОВКА ОКРУЖЕНИЯ
+-- Создаем основную таблицу
+CREATE TABLE IF NOT EXISTS users (
+    id INT PRIMARY KEY,
+    name VARCHAR(50),
+    email VARCHAR(50)
+);
+
+-- Создаем вспомогательную таблицу с данными
+CREATE TABLE IF NOT EXISTS source_data (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_name VARCHAR(50),
+    user_email VARCHAR(50),
+    status VARCHAR(20)
+);
+
+-- Заполняем вспомогательную таблицу примером
+INSERT INTO source_data (user_name, user_email, status) 
+VALUES ('Boris', 'boris@mail.com', 'active'), ('Anna', 'anna@mail.com', 'pending');
+
+-- 2. ВСТАВКА (INSERT + SELECT + CALCULATED ID)
+-- Вставляем Бориса, рассчитывая ID как (кол-во строк в users + 1)
+-- Данные берем из таблицы source_data
+INSERT INTO users (id, name, email)
+SELECT 
+    (SELECT COUNT(*) + 1 FROM users) AS new_id, 
+    sd.user_name, 
+    sd.user_email
+FROM source_data sd
+WHERE sd.user_name = 'Boris'
+LIMIT 1;
+
+-- 3. ОБНОВЛЕНИЕ (UPDATE + SET + JOIN)
+-- Допустим, Борис сменил почту в исходной таблице, и нам надо обновить её в основной.
+-- Используем JOIN, чтобы связать таблицы по имени.
+UPDATE users u
+JOIN source_data sd ON u.name = sd.user_name
+SET u.email = 'new_boris_work@mail.com', -- Ручное обновление
+    u.name = UPPER(u.name)              -- Пример функции: делаем имя капсом
+WHERE sd.status = 'active';             -- Условие: обновляем только активных
+
+-- 4. ПРОВЕРКА РЕЗУЛЬТАТА
+SELECT * FROM users;
+
+-- Задача 54. Удалить членов семьи Quincey
+-- Удалить всех членов семьи с фамилией "Quincey".
+delete from FamilyMembers
+where right(FamilyMembers.member_name,7) = 'Quincey'
+-- Задача 55. Удалить компании с наименьшим числом рейсов
+-- Удалить компании, совершившие наименьшее количество рейсов.
+DELETE FROM Company
+WHERE id IN (
+    SELECT company
+    FROM Trip
+    GROUP BY company
+    HAVING COUNT(id) = (
+        SELECT MIN(count_trips)
+        FROM (
+            SELECT COUNT(id) AS count_trips
+            FROM Trip
+            GROUP BY company
+        ) AS temp
+    )
+);
