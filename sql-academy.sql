@@ -448,7 +448,7 @@ select (rowscount+1),'auto'
 from (select count(*) as rowscount from GoodTypes) as temp
 -- У всех таблиц должен быть алиас
 -- Задача 53. Изменить имя на "Andie Anthony"
--- update FamilyMembers
+update FamilyMembers
 set FamilyMembers.member_name = 'Andie Anthony'
 where FamilyMembers.member_id = 3
   
@@ -516,3 +516,45 @@ WHERE id IN (
         ) AS temp
     )
 );
+
+-- ДЕНЬ 12 (23.03.2026). Решение задач 56-60 с SQL Academy.
+-- Задача 56. Удалить перелеты из Москвы
+-- Удалить все перелеты, совершенные из Москвы (Moscow).
+delete from Trip
+where Trip.town_from = 'Moscow'
+-- Задача 57. Перенести расписание на 30 мин
+-- Перенести расписание всех занятий на 30 мин. вперед.
+/* Чтобы обновить все строки в таблице разом, используйте оператор UPDATE без условия WHERE. 
+Для работы со временем в SQL обычно используются функции DATEADD (SQL Server), INTERVAL (PostgreSQL/MySQL) или date() (SQLite). */
+update Timepair
+set Timepair.start_pair = Timepair.start_pair 
++ interval 30 MINUTE,
+Timepair.end_pair = Timepair.end_pair + interval 30 minute
+-- Задача 58. Добавить отзыв от George Clooney
+-- Добавить отзыв с рейтингом 5 на жилье, находящиеся по адресу "11218, Friel Place, New York", от имени "George Clooney"
+insert into Reviews (id,reservation_id,rating)
+select 
+    (select count(*) + 1 from Reviews) as new_id,
+    Reservations.id, 5
+from Reservations
+join Users on Users.id = Reservations.user_id
+join Rooms on Rooms.id = Reservations.room_id
+where Users.name = 'George Clooney'
+and Rooms.address = '11218, Friel Place, New York'
+-- Задача 59. Пользователи с белорусским номером
+-- Вывести пользователей,указавших Белорусский номер телефона ? Телефонный код Белоруссии +375.
+select *
+from Users
+where left(Users.phone_number,4) = '+375'
+-- Задача 60. Преподаватели в 11-ых классах
+-- Выведите идентификаторы преподавателей, которые хотя бы один раз за всё время преподавали в каждом из одиннадцатых классов.
+select distinct `Schedule`.teacher
+from `Schedule`
+join Class on Class.id = `Schedule`.class
+where left(Class.name,2) = '11' 
+GROUP BY teacher
+HAVING COUNT(DISTINCT Schedule.class) = (SELECT COUNT(*) FROM Class WHERE name LIKE '11%')
+/* Стратегия «реляционного деления» строится на поиске элементов, связанных со всеми объектами из определенного списка. 
+Опознать такие задачи можно по ключевым словам «в каждом», «во всех» или «целиком» (например, «студент, сдавший все зачеты» или «товар, 
+представленный во всех магазинах»). Решение всегда сводится к группировке по главному объекту и сравнению количества его уникальных связей 
+через HAVING COUNT(DISTINCT ...) с общим количеством целей, полученным через подзапрос. */
