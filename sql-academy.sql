@@ -558,3 +558,45 @@ HAVING COUNT(DISTINCT Schedule.class) = (SELECT COUNT(*) FROM Class WHERE name L
 Опознать такие задачи можно по ключевым словам «в каждом», «во всех» или «целиком» (например, «студент, сдавший все зачеты» или «товар, 
 представленный во всех магазинах»). Решение всегда сводится к группировке по главному объекту и сравнению количества его уникальных связей 
 через HAVING COUNT(DISTINCT ...) с общим количеством целей, полученным через подзапрос. */
+
+-- ДЕНЬ 13 (24.03.2026). Решение задач 61-65 с SQL Academy.
+-- Задача 61. Комнаты, зарезервированные на 12-й неделе 2020 года
+-- Выведите список комнат, которые были зарезервированы хотя бы на одни сутки в 12-ую неделю 2020 года. 
+-- В данной задаче в качестве одной недели примите период из семи дней, первый из которых начинается 1 января 2020 года. 
+-- Например, первая неделя года — 1–7 января, а третья — 15–21 января.
+select Rooms.*
+from Rooms
+join Reservations on Reservations.room_id = Rooms.id
+where Reservations.start_date between '2020-03-18' and '2020-03-24'
+or Reservations.end_date between '2020-03-18' and '2020-03-24'
+-- Задача 62. Рейтинг доменов 2-го уровня
+-- Вывести в порядке убывания популярности доменные имена 2-го уровня, используемые пользователями для электронной почты. 
+-- Полученный результат необходимо дополнительно отсортировать по возрастанию названий доменных имён.
+select substring_index(Users.email,'@',-1) as domain,
+count(*) as count
+from Users
+group by domain
+order by count desc, domain asc
+-- Задача 63. Сортировка имён обучающихся
+-- Выведите отсортированный список (по возрастанию) фамилий и имен студентов в виде Фамилия.И.
+select concat(Student.last_name,'.',left(Student.first_name,1),'.') as name
+from Student
+order by name asc
+-- Задача 64. Количество бронирований по месяцам
+-- Вывести количество бронирований по каждому месяцу каждого года, в которых было хотя бы 1 бронирование. 
+-- Результат отсортируйте в порядке возрастания даты бронирования.
+select year(Reservations.start_date) as year,
+month(Reservations.start_date) as month,
+count(*) as amount
+from Reservations
+group by year,month
+order by year asc,month asc
+-- Внутренние функции year(),month() возвращают год и месяц из даты
+-- Задача 65. Рейтинг арендованных комнат
+-- Необходимо вывести рейтинг для комнат, которые хоть раз арендовали, как среднее значение рейтинга отзывов округленное до целого вниз.
+SELECT Reservations.room_id,
+floor(avg(Reviews.rating)) as rating
+from Rooms
+join Reservations on Rooms.id = Reservations.room_id
+join Reviews on Reviews.reservation_id = Reservations.id
+group by Reservations.room_id
