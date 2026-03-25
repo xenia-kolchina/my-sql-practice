@@ -600,3 +600,80 @@ from Rooms
 join Reservations on Rooms.id = Reservations.room_id
 join Reviews on Reviews.reservation_id = Reservations.id
 group by Reservations.room_id
+
+-- ДЕНЬ 14 (25.03.2026). Решение задач 66-70 с SQL Academy.
+-- Задача 66. Комнаты со всеми удобствами
+-- Вывести список комнат со всеми удобствами (наличие ТВ, интернета, кухни и кондиционера), 
+-- а также общее количество дней и сумму за все дни аренды каждой из таких комнат.
+select Rooms.home_type,
+Rooms.address,
+ifnull(sum(TIMESTAMPDIFF(DAY, Reservations.start_date,Reservations.end_date)),0) as days,
+ifnull(sum(Reservations.total),0) as total_fee
+from Rooms
+left JOIN Reservations ON Reservations.room_id = Rooms.id
+where Rooms.has_air_con = 1 AND
+Rooms.has_internet = 1 AND 
+Rooms.has_kitchen = 1 AND 
+Rooms.has_tv = 1
+group by Rooms.id, Rooms.home_type,
+Rooms.address
+-- Задача 67. Время отлёта и прилёта
+-- Вывести время отлета и время прилета для каждого перелета в формате "ЧЧ:ММ, ДД.ММ - ЧЧ:ММ, ДД.ММ", где часы и минуты с ведущим нулем, а день и месяц без.
+select concat(SUBSTRING(Trip.time_out,12,5),
+', ',
+SUBSTRING(Trip.time_out,9,2) + 0,
+'.',
+SUBSTRING(Trip.time_out,6,2) + 0,
+' - ',
+SUBSTRING(Trip.time_in,12,5),
+', ',
+SUBSTRING(Trip.time_in,9,2) + 0,
+'.',
+SUBSTRING(Trip.time_in,6,2) + 0) as flight_time
+from Trip
+-- Задача 68. Последний арендатор комнаты 
+-- Для каждой комнаты, которую снимали как минимум 1 раз, найдите имя человека, снимавшего ее последний раз, и дату, когда он выехал
+/* Оконные функции. Для них характерны формулировки:
+1. «Для каждого...» + «самый...»:
+Пример: «Для каждого отдела найти сотрудника с самой высокой зарплатой».
+Почему: Обычный GROUP BY выдаст только ID отдела и сумму, а оконная функция позволит вытащить и имя счастливчика.
+2. «Рейтинг» или «Топ-N»:
+Пример: «Вывести топ-3 самых дорогих товаров в каждой категории».
+Почему: Функции RANK() или DENSE_RANK() созданы именно для этого.
+3. «Накопительный итог» или «Скользящее среднее»:
+Пример: «Посчитать сумму выручки нарастающим итогом по дням».
+Почему: Окна умеют «смотреть назад» на предыдущие строки.
+4. «Разница с предыдущим»:
+Пример: «На сколько цена сегодня отличается от цены вчера?».
+Почему: Функции LAG() и LEAD позволяют достать значение из соседней строки. */
+with guests as (select distinct Reservations.room_id,
+Users.name,
+row_number()
+over(
+PARTITION BY Reservations.room_id
+Order by Reservations.end_date desc) as latest,
+Reservations.end_date
+from Reservations
+join Users on Users.id = Reservations.user_id
+join Rooms on Rooms.id = Reservations.room_id)
+select room_id,name,end_date 
+from guests
+where latest = 1
+-- Задача 69. Заработок владельцев комнат
+-- Вывести идентификаторы всех владельцев комнат, что размещены на сервисе бронирования жилья и сумму, которую они заработали
+select Rooms.owner_id,
+ifnull(sum(Reservations.total),0) as total_earn
+from Rooms
+left join Reservations on Rooms.id = Reservations.room_id
+group by Rooms.owner_id
+-- Задача 70. Категоризация жилья по цене
+-- Необходимо категоризовать жилье на economy, comfort, premium по цене соответственно <= 100, 100 < цена < 200, >= 200. 
+-- В качестве результата вывести таблицу с названием категории и количеством жилья, попадающего в данную категорию
+select count(*) as count,
+case when Rooms.price >= 200 then 'premium'
+when Rooms.price > 100 then 'comfort'
+else 'economy' 
+end as category
+from Rooms
+group by category
+-- Запятые при case when не нужны!!! И прописывать end as, а не просто as
