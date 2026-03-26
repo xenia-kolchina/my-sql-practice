@@ -677,3 +677,43 @@ end as category
 from Rooms
 group by category
 -- Запятые при case when не нужны!!! И прописывать end as, а не просто as
+
+-- Задача 71. Процент активных пользователей
+-- Найдите какой процент пользователей, зарегистрированных на сервисе бронирования, хоть раз арендовали или сдавали в аренду жилье. Результат округлите до сотых.
+SELECT 
+    ROUND(
+        COUNT(DISTINCT Users.id) * 100.0 / (SELECT COUNT(*) FROM Users), 
+        2
+    ) AS percent
+FROM Users
+JOIN Reservations ON Users.id = Reservations.user_id 
+    OR Users.id IN (
+        SELECT owner_id FROM Rooms WHERE id = Reservations.room_id
+    )
+-- Задача 72. Средняя цена бронирования
+-- Выведите среднюю цену бронирования за сутки для каждой из комнат, которую бронировали хотя бы один раз. Среднюю цену необходимо округлить до целого значения вверх.
+select Reservations.room_id,CEILING(avg(Reservations.price)) as avg_price
+from Reservations
+group by Reservations.room_id
+-- Задача 73. Комнаты, арендованные нечетное число раз
+-- Выведите id тех комнат, которые арендовали нечетное количество раз
+select Reservations.room_id,
+count(Reservations.id) as count
+from Reservations
+group by Reservations.room_id
+having count(Reservations.id) % 2 = 1
+-- where нельзя с агрегирующими функциями 
+-- Задача 74. Наличие интернета в помещении
+-- Выведите идентификатор и признак наличия интернета в помещении. Если интернет в сдаваемом жилье присутствует, то выведите «YES», иначе «NO».
+select Rooms.id,
+case when Rooms.has_internet = 1 then 'YES'
+else 'NO'
+end as has_internet
+from Rooms
+-- Задача 75. Студенты, рожденные в мае
+-- Выведите фамилию, имя и дату рождения студентов, кто был рожден в мае.
+select Student.last_name,
+Student.first_name,
+Student.birthday
+from Student
+where SUBSTRING(Student.birthday,6,2)='05'
