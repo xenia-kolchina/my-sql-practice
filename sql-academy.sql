@@ -717,3 +717,103 @@ Student.first_name,
 Student.birthday
 from Student
 where SUBSTRING(Student.birthday,6,2)='05'
+
+-- ДЕНЬ 16 (30.03.2026). Решение задач 76-80 с SQL Academy.
+-- Задача 76. Статус пользователя: собственник/арендатор
+-- Вывести имена всех пользователей сервиса бронирования жилья, а также два признака: является ли пользователь собственником
+-- какого-либо жилья (is_owner) и является ли пользователь арендатором (is_tenant).
+select Users.name,
+case when Users.id in (select Rooms.owner_id
+from Rooms) then 1
+else 0
+end as is_owner,
+case when Users.id in (select Reservations.user_id
+from Reservations) then 1
+else 0
+end as is_tenant
+from Users
+-- Задача 77. Создать представление "People"
+-- Создайте представление с именем "People", которое будет содержать список имен (first_name) и фамилий (last_name)
+-- всех студентов (Student) и преподавателей(Teacher)
+/* ==========================================================================
+   SQL THEORY: ПРЕДСТАВЛЕНИЯ (VIEWS)
+   ==========================================================================
+   VIEW — это сохраненный SQL-запрос, который в базе данных выглядит и 
+   используется как обычная "виртуальная" таблица.
+   ========================================================================== */
+
+-- 1. ОСНОВНОЙ СИНТАКСИС (Создание и удаление)
+CREATE VIEW ViewName AS
+SELECT column1, column2
+FROM TableName
+WHERE condition;
+
+DROP VIEW ViewName; -- Удаление представления
+
+
+-- 2. КЛЮЧЕВЫЕ ОСОБЕННОСТИ
+-- ● Виртуальность: Данные не дублируются, хранится только текст запроса.
+-- ● Динамичность: При каждом обращении данные подтягиваются из исходных таблиц.
+-- ● Совместимость: Можно делать SELECT, JOIN и фильтрацию к самому VIEW.
+
+
+-- 3. ЗАЧЕМ ИСПОЛЬЗОВАТЬ?
+-- ● Упрощение: Скрытие сложных JOIN-ов и вложенных подзапросов.
+-- ● Безопасность: Ограничение доступа к секретным столбцам (напр. пароли).
+-- ● Инкапсуляция: Если структура таблиц изменится, достаточно обновить VIEW.
+
+
+-- 4. ОГРАНИЧЕНИЯ (Read-Only Views)
+-- Нельзя изменять данные (INSERT/UPDATE) через VIEW, если оно содержит:
+-- ● Агрегатные функции (SUM, AVG, MIN, MAX).
+-- ● Группировку данных (GROUP BY, HAVING).
+-- ● Уникальные значения (DISTINCT).
+-- ● Объединения (UNION).
+
+
+-- 5. МАТЕРИАЛИЗОВАННЫЕ ПРЕДСТАВЛЕНИЯ (Materialized Views)
+-- В некоторых СУБД (PostgreSQL, Oracle) результат запроса сохраняется на диск.
+-- ● Плюс: Огромная скорость выборки (не нужно вычислять запрос каждый раз).
+-- ● Минус: Данные нужно обновлять принудительно (REFRESH).
+
+
+/* ==========================================================================
+   EXAMPLE: Упрощение доступа к данным о продажах
+   ========================================================================== */
+CREATE VIEW ActiveSalesSummary AS
+SELECT 
+    p.ProductName, 
+    SUM(o.Quantity) AS TotalQty, 
+    SUM(o.Price * o.Quantity) AS TotalRevenue
+FROM Orders o
+JOIN Products p ON o.ProductID = p.ID
+WHERE o.Status = 'Completed'
+GROUP BY p.ProductName;
+
+-- Использование:
+SELECT * FROM ActiveSalesSummary WHERE TotalRevenue > 1000;
+
+create view People AS 
+select Student.first_name,Student.last_name
+from Student
+UNION 
+select Teacher.first_name,Teacher.last_name
+from Teacher
+-- Задача 78. Пользователи с почтой hotmail.com
+-- Выведите всех пользователей с электронной почтой в «hotmail.com»
+select *
+from Users
+where lower(Users.email) like '%@hotmail.com%'
+-- Задача 79. Цена со скидкой 10%
+-- Выведите поля id, home_type, price у всего жилья из таблицы Rooms. 
+-- Если комната имеет телевизор и интернет одновременно, то в качестве цены в поле price выведите цену, применив скидку 10%.
+select Rooms.id,Rooms.home_type,
+case when Rooms.has_tv = 1 and Rooms.has_internet = 1 then Rooms.price * 0.9
+else Rooms.price 
+end as price   
+from Rooms
+-- Задача 80. Создать представление "Verified_Users"
+-- create view Verified_Users AS 
+select Users.id,Users.name,Users.email
+from Users
+where Users.email_verified_at is not null 
